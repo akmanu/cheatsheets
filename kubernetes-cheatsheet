@@ -1,1 +1,30 @@
 
+List All Container Images Running in a Cluster
+
+List all Container images in all namespaces
+kubectl get pods --all-namespaces -o jsonpath="{..image}" |\
+tr -s '[[:space:]]' '\n' |\
+sort |\
+uniq -c
+
+
+kubectl get pods --all-namespaces -o jsonpath="{.items[*].spec.containers[*].image}"
+The jsonpath is interpreted as follows:
+.items[*]: for each returned value
+.spec: get the spec
+.containers[*]: for each container
+.image: get the image
+
+
+List Container images by Pod 
+kubectl get pods --all-namespaces -o=jsonpath='{range .items[*]}{"\n"}{.metadata.name}{":\t"}{range .spec.containers[*]}{.image}{", "}{end}{end}' |\
+sort
+
+List Container images filtering by Pod label
+kubectl get pods --all-namespaces -o=jsonpath="{..image}" -l app=nginx
+
+List Container images filtering by Pod namespace 
+kubectl get pods --namespace kube-system -o jsonpath="{..image}"
+
+List Container images using a go-template instead of jsonpath
+kubectl get pods --all-namespaces -o go-template --template="{{range .items}}{{range .spec.containers}}{{.image}} {{end}}{{end}}"
